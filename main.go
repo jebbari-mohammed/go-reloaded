@@ -132,25 +132,32 @@ func main() {
 					a := strings.TrimSuffix(words[i+1], ")")
 
 					num, _ := strconv.Atoi(string(a))
+					num2 := 0
 					if num > len(words[:i]) {
-						num = len(words[:i])
+						num2 = len(words[:i])
+					} else {
+						num2 = num
 					}
 					if num <= len(words[:i]) {
-						for k := 1; k < num; k++ {
-							if words[i-k] == "" || regponc.MatchString(words[i-k]) {
-								num++
+						for k := 1; k <= num2; k++ {
+							if i-k >= 0 {
+								if words[i-k] == "" || regponc.MatchString(words[i-k]) {
+									num2++
+								}
 							}
 						}
 					}
-					for l := 1; l <= num; l++ {
-						if words[i-l] != "" {
-							words[i-l] = strings.ToUpper(words[i-l])
+					for l := 1; l <= num2; l++ {
+						if i-l >= 0 {
+							if words[i-l] != "" {
+								words[i-l] = strings.ToUpper(words[i-l])
+							}
 						}
 					}
+					words = append(words[:i], words[i+2:]...)
+					i--
 
 				}
-				words = append(words[:i], words[i+2:]...)
-				i--
 			}
 
 		case "(low,":
@@ -160,27 +167,32 @@ func main() {
 			if i != 0 {
 				if reg.MatchString(words[i+1]) {
 					a := strings.TrimSuffix(words[i+1], ")")
-
 					num, _ := strconv.Atoi(string(a))
+					num2 := 0
 					if num > len(words[:i]) {
-						num = len(words[:i])
+						num2 = len(words[:i])
+					} else {
+						num2 = num
 					}
 					if num <= len(words[:i]) {
-						for p := 1; p < num; p++ {
-							if words[i-p] == "" || regponc.MatchString(words[i-p]) {
-								num++
+						for p := 1; p <= num2; p++ {
+							if i-p >= 0 {
+								if words[i-p] == "" || regponc.MatchString(words[i-p]) {
+									num2++
+								}
 							}
 						}
 					}
-					for f := 1; f <= num; f++ {
-						if words[i-f] != "" {
-							words[i-f] = strings.ToLower(words[i-f])
+					for f := 1; f <= num2; f++ {
+						if i-f >= 0 {
+							if words[i-f] != "" {
+								words[i-f] = strings.ToLower(words[i-f])
+							}
 						}
 					}
-
+					words = append(words[:i], words[i+2:]...)
+					i--
 				}
-				words = append(words[:i], words[i+2:]...)
-				i--
 			}
 
 		case "(cap,":
@@ -192,25 +204,31 @@ func main() {
 					a := strings.TrimSuffix(words[i+1], ")")
 
 					num, _ := strconv.Atoi(string(a))
+					num2 := 0
 					if num > len(words[:i]) {
-						num = len(words[:i])
+						num2 = len(words[:i])
+					} else {
+						num2 = num
 					}
 					if num <= len(words[:i]) {
-						for k := 1; k < num; k++ {
-							if words[i-k] == "" || regponc.MatchString(words[i-k]) {
-								num++
+						for k := 1; k <= num2; k++ {
+							if i-k >= 0 {
+								if words[i-k] == "" || regponc.MatchString(words[i-k]) {
+									num2++
+								}
 							}
 						}
 					}
-					for l := 1; l <= num; l++ {
-						if words[i-l] != "" {
-							words[i-l] = strings.ToUpper(string(words[i-l][0])) + strings.ToLower(string(words[i-l][1:]))
+					for l := 1; l <= num2; l++ {
+						if i-l >= 0 {
+							if words[i-l] != "" {
+								words[i-l] = strings.ToUpper(string(words[i-l][0])) + strings.ToLower(string(words[i-l][1:]))
+							}
 						}
 					}
-
+					words = append(words[:i], words[i+2:]...)
+					i--
 				}
-				words = append(words[:i], words[i+2:]...)
-				i--
 			}
 
 		}
