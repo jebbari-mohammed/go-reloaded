@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -25,216 +27,209 @@ func main() {
 		return
 	}
 
-	file, err := os.ReadFile(sample)
+	lire, err := os.Open(sample)
 	if err != nil {
 		panic(err)
 	}
-	words := strings.Split(string(file), " ")
+	defer lire.Close()
+	var allLines []string
+	scanner := bufio.NewScanner(lire)
 	reg := regexp.MustCompile(`^\d+\)$`)
-	regponc := regexp.MustCompile(`^[.,?!:;]+$`)
-	for i := 0; i <= len(words)-1; i++ {
-		switch words[i] {
 
-		case "(hex)":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				for j := 1; j <= len(words[:i]); j++ {
-					if words[i-j] == "" {
-						continue
-					} else {
-						number, _ := strconv.ParseInt(words[i-j], 16, 64)
-						words[i-j] = fmt.Sprint(number)
-						break
-					}
-				}
-				words = append(words[:i], words[i+1:]...)
-				i--
-			}
-		case "(bin)":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				for j := 1; j <= len(words[:i]); j++ {
-					if words[i-j] == "" {
-						continue
-					} else {
-						number, _ := strconv.ParseInt(words[i-j], 2, 64)
-						words[i-j] = fmt.Sprint(number)
-						break
-					}
-				}
-				words = append(words[:i], words[i+1:]...)
-				i--
-			}
-		case "(up)":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				for j := 1; j <= len(words[:i]); j++ {
-					if words[i-j] == "" {
-						continue
-					} else {
-						words[i-j] = strings.ToUpper(words[i-j])
-						break
-					}
-				}
-				words = append(words[:i], words[i+1:]...)
-				i--
-			}
-		case "(cap)":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				for j := 1; j <= len(words[:i]); j++ {
-					if words[i-j] == "" {
-						continue
-					} else {
-						if len(words[i-j]) > 1 {
-							words[i-j] = strings.ToUpper(string(words[i-j][0])) + strings.ToLower(string(words[i-j][1:]))
-							break
+	// Loop through the words and process tags
+	voiles := []rune{'a', 'o', 'e', 'h', 'u', 'i', 'A', 'O', 'E', 'H', 'U', 'I'}
+	for scanner.Scan() {
+		line := scanner.Text()
+		words := strings.Fields(line)
+
+		ponc := regexp.MustCompile(`^[,.?!:;]+$`)
+		regBin := regexp.MustCompile(`^[01]+$`)
+		regHex := regexp.MustCompile(`^[0-9a-fA-F]+$`)
+		regPlus := regexp.MustCompile(`^\+\d+\)$`)
+		regMoins := regexp.MustCompile(`^\-\d+\)$`)
+		for i := 0; i < len(words); i++ {
+			switch words[i] {
+
+			case "a":
+				for _, char := range voiles {
+					if i+1 < len(words) {
+						if char == rune(words[i+1][0]) && i+1 < len(words) {
+							words[i] = "an"
 						}
-						if len(words[i-j]) == 0 {
-							words[i-j] = strings.ToUpper(words[i-j])
+					}
+				}
+			case "A":
+				for _, char := range voiles {
+					if i+1 < len(words) {
+					if char == rune(words[i+1][0]) && i+1 < len(words) {
+						words[i] = "An"
+					}
+				}
+				}
+			case "(up)":
+				if i == 0 {
+					words = words[i+1:]
+					i--
+				}
+				if i > 0 {
+					for j := i; j > 0; j-- {
+						if ponc.MatchString(words[j-1]) {
+							continue
+						} else {
+							words[j-1] = strings.ToUpper(words[j-1])
 							break
 						}
 					}
+					words = append(words[:i], words[i+1:]...) // Remove the tag
+					i--                                       // Adjust the index after removal
 				}
-				words = append(words[:i], words[i+1:]...)
-				i--
-			}
-		case "(low)":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				for j := 1; j <= len(words[:i]); j++ {
-					if words[i-j] == "" {
-						continue
-					} else {
-						words[i-j] = strings.ToLower(words[i-j])
-						break
+
+			case "(low)":
+				if i == 0 {
+					words = words[i+1:]
+					i--
+				}
+				if i > 0 {
+					for j := i; j > 0; j-- {
+						if ponc.MatchString(words[j-1]) {
+							continue
+						} else {
+							words[j-1] = strings.ToLower(words[j-1])
+							break
+						}
 					}
+					words = append(words[:i], words[i+1:]...) // Remove the tag
+					i--                                       // Adjust the index after removal
 				}
-				words = append(words[:i], words[i+1:]...)
-				i--
-			}
-		case "(up,":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				if reg.MatchString(words[i+1]) {
+
+			case "(cap)":
+				if i == 0 {
+					words = words[i+1:]
+					i--
+				}
+				if i > 0 {
+					for j := i; j > 0; j-- {
+						if ponc.MatchString(words[j-1]) {
+							continue
+						} else {
+							words[j-1] = titleCase(words[j-1])
+							break
+						}
+					}
+					words = append(words[:i], words[i+1:]...) // Remove the tag
+					i--                                       // Adjust the index after removal
+				}
+
+			case "(hex)":
+				if i == 0 {
+					words = words[i+1:]
+					i--
+				}
+				if i > 0 {
+					for j := i; j > 0; j-- {
+						if ponc.MatchString(words[j-1]) {
+							continue
+						} else if regHex.MatchString(words[j-1]) {
+							words[j-1] = HextoInt(words[j-1])
+							break
+						}
+					}
+					words = append(words[:i], words[i+1:]...) // Remove the tag
+					i--                                       // Adjust the index after removal
+				}
+
+			case "(bin)":
+				if i == 0 {
+					words = words[i+1:]
+					i--
+				}
+				if i > 0 {
+					for j := i; j > 0; j-- {
+						if ponc.MatchString(words[j-1]) {
+							continue
+						} else if regBin.MatchString(words[j-1]) {
+							words[j-1] = BintoInt(words[j-1])
+							break
+						}
+					}
+					words = append(words[:i], words[i+1:]...) // Remove the tag
+					i--                                       // Adjust the index after removal
+				}
+			case "(cap,":
+				if i == 0  {
+					if i+2 < len(words) && reg.MatchString(words[i+1])  {
+					words = words[i+2:]
+					i--
+				}
+				}
+				if i != 0 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
 					a := strings.TrimSuffix(words[i+1], ")")
 
 					num, _ := strconv.Atoi(string(a))
-					num2 := 0
 					if num > len(words[:i]) {
-						num2 = len(words[:i])
-					} else {
-						num2 = num
+						num = len(words[:i])
 					}
-					if num <= len(words[:i]) {
-						for k := 1; k <= num2; k++ {
-							if i-k >= 0 {
-								if words[i-k] == "" || regponc.MatchString(words[i-k]) {
-									num2++
-								}
-							}
-						}
+					for b := 1; b <= num; b++ {
+						words[i-b] = titleCase(words[i-b])
 					}
-					for l := 1; l <= num2; l++ {
-						if i-l >= 0 {
-							if words[i-l] != "" {
-								words[i-l] = strings.ToUpper(words[i-l])
-							}
-						}
-					}
-					words = append(words[:i], words[i+2:]...)
-					i--
-
-				}
-			}
-
-		case "(low,":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				if reg.MatchString(words[i+1]) {
-					a := strings.TrimSuffix(words[i+1], ")")
-					num, _ := strconv.Atoi(string(a))
-					num2 := 0
-					if num > len(words[:i]) {
-						num2 = len(words[:i])
-					} else {
-						num2 = num
-					}
-					if num <= len(words[:i]) {
-						for p := 1; p <= num2; p++ {
-							if i-p >= 0 {
-								if words[i-p] == "" || regponc.MatchString(words[i-p]) {
-									num2++
-								}
-							}
-						}
-					}
-					for f := 1; f <= num2; f++ {
-						if i-f >= 0 {
-							if words[i-f] != "" {
-								words[i-f] = strings.ToLower(words[i-f])
-							}
-						}
-					}
-					words = append(words[:i], words[i+2:]...)
+					words = append(words[:i], words[i+2:]...) // He removes "(cap,"
 					i--
 				}
-			}
 
-		case "(cap,":
-			if i == 0 {
-				words = words[i+1:]
-			}
-			if i != 0 {
-				if reg.MatchString(words[i+1]) {
+			case "(low,":
+				if  i == 0 {
+					if i+2 < len(words) && reg.MatchString(words[i+1]) {
+					words = words[i+2:]
+					i--
+				}
+				}
+				if i != 0 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
 					a := strings.TrimSuffix(words[i+1], ")")
 
 					num, _ := strconv.Atoi(string(a))
-					num2 := 0
 					if num > len(words[:i]) {
-						num2 = len(words[:i])
-					} else {
-						num2 = num
+						num = len(words[:i])
 					}
-					if num <= len(words[:i]) {
-						for k := 1; k <= num2; k++ {
-							if i-k >= 0 {
-								if words[i-k] == "" || regponc.MatchString(words[i-k]) {
-									num2++
-								}
-							}
+					for b := 1; b <= num; b++ {
+						words[i-b] = strings.ToLower(words[i-b])
+					}
+					words = append(words[:i], words[i+2:]...) // He removes "(cap,"
+					i--
+				}
+			case "(up,":
+				if  i == 0  {
+					if i+2 < len(words) && reg.MatchString(words[i+1]) {
+						if regMoins.MatchString(words[i+1]) {
+							words = words[i+2:]
+							i--
 						}
+					words = words[i+2:]
+					i--
+				}
+				}
+				if i != 0 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
+					a := strings.TrimSuffix(words[i+1], ")")
+
+					num, _ := strconv.Atoi(string(a))
+					if num > len(words[:i]) {
+						num = len(words[:i])
 					}
-					for l := 1; l <= num2; l++ {
-						if i-l >= 0 {
-							if words[i-l] != "" {
-								words[i-l] = strings.ToUpper(string(words[i-l][0])) + strings.ToLower(string(words[i-l][1:]))
-							}
-						}
+					for b := 1; b <= num; b++ {
+						words[i-b] = strings.ToUpper(words[i-b])
 					}
-					words = append(words[:i], words[i+2:]...)
+					words = append(words[:i], words[i+2:]...) // He removes "(cap,"
 					i--
 				}
 			}
-
 		}
+		Lines := strings.Join(words, " ")
+		allLines = append(allLines, Lines)
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal("Error reading file: ", err)
 	}
 
-	finaltxt := strings.Join(words, " ")
+	finaltxt := strings.Join(allLines, "\n")
 	finalfile, err := os.Create(result)
 	if err != nil {
 		panic(err)
@@ -242,4 +237,22 @@ func main() {
 	if _, err := io.WriteString(finalfile, finaltxt); err != nil {
 		panic(err)
 	}
+}
+
+func HextoInt(hex string) string {
+	number, _ := strconv.ParseInt(hex, 16, 64)
+	return fmt.Sprint(number)
+}
+
+func BintoInt(bin string) string {
+	number, _ := strconv.ParseInt(bin, 2, 64)
+	return fmt.Sprint(number)
+}
+
+func titleCase(word string) string {
+	if len(word) == 0 {
+		return word
+	}
+	// Convert the first character to uppercase and the rest to lowercase
+	return strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
 }
