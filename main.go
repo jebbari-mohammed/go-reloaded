@@ -49,23 +49,6 @@ func main() {
 		regMoins := regexp.MustCompile(`^\-\d+\)$`)
 		for i := 0; i < len(words); i++ {
 			switch words[i] {
-
-			case "a":
-				for _, char := range voiles {
-					if i+1 < len(words) {
-						if char == rune(words[i+1][0]) && i+1 < len(words) {
-							words[i] = "an"
-						}
-					}
-				}
-			case "A":
-				for _, char := range voiles {
-					if i+1 < len(words) {
-					if char == rune(words[i+1][0]) && i+1 < len(words) {
-						words[i] = "An"
-					}
-				}
-				}
 			case "(up)":
 				if i == 0 {
 					words = words[i+1:]
@@ -156,74 +139,171 @@ func main() {
 					i--                                       // Adjust the index after removal
 				}
 			case "(cap,":
-				if i == 0  {
-					if i+2 < len(words) && reg.MatchString(words[i+1])  {
+				if i == 0 && i+1 <= len(words)-1 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1]) || regMoins.MatchString(words[i+1])) {
 					words = words[i+2:]
 					i--
-				}
-				}
-				if i != 0 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
-					a := strings.TrimSuffix(words[i+1], ")")
 
-					num, _ := strconv.Atoi(string(a))
-					if num > len(words[:i]) {
-						num = len(words[:i])
+				}
+				if i > 0 && i+1 <= len(words)-1 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
+					a := strings.TrimSuffix(words[i+1], ")")
+					numero, _ := strconv.Atoi(string(a))
+					if numero > len(words[:i]) {
+						numero = len(words[:i])
 					}
-					for b := 1; b <= num; b++ {
-						words[i-b] = titleCase(words[i-b])
+					countponc := 0
+					countwords := 0
+
+					for r := i - 1; countwords < numero && r >= 0; r-- {
+						if ponc.MatchString(words[r]) {
+							countponc++
+						} else {
+							countwords++
+						}
+						total := countponc + countwords
+
+						for j := 1; j <= total; j++ {
+							words[i-j] = titleCase(words[i-j])
+						}
+
 					}
-					words = append(words[:i], words[i+2:]...) // He removes "(cap,"
+					words = append(words[:i], words[i+2:]...)
 					i--
+
 				}
 
 			case "(low,":
-				if  i == 0 {
-					if i+2 < len(words) && reg.MatchString(words[i+1]) {
+				if i == 0 && i+1 <= len(words)-1 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1]) || regMoins.MatchString(words[i+1])) {
 					words = words[i+2:]
 					i--
-				}
-				}
-				if i != 0 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
-					a := strings.TrimSuffix(words[i+1], ")")
 
-					num, _ := strconv.Atoi(string(a))
-					if num > len(words[:i]) {
-						num = len(words[:i])
+				}
+				if i > 0 && i+1 <= len(words)-1 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
+					a := strings.TrimSuffix(words[i+1], ")")
+					numero, _ := strconv.Atoi(string(a))
+					if numero > len(words[:i]) {
+						numero = len(words[:i])
 					}
-					for b := 1; b <= num; b++ {
-						words[i-b] = strings.ToLower(words[i-b])
+					countponc := 0
+					countwords := 0
+
+					for r := i - 1; countwords < numero && r >= 0; r-- {
+						if ponc.MatchString(words[r]) {
+							countponc++
+						} else {
+							countwords++
+						}
+						total := countponc + countwords
+
+						for j := 1; j <= total; j++ {
+							words[i-j] = strings.ToLower(words[i-j])
+						}
+
 					}
-					words = append(words[:i], words[i+2:]...) // He removes "(cap,"
+					words = append(words[:i], words[i+2:]...)
 					i--
+
 				}
 			case "(up,":
-				if  i == 0  {
-					if i+2 < len(words) && reg.MatchString(words[i+1]) {
-						if regMoins.MatchString(words[i+1]) {
-							words = words[i+2:]
-							i--
-						}
+				if i == 0 && i+1 <= len(words)-1 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1]) || regMoins.MatchString(words[i+1])) {
 					words = words[i+2:]
 					i--
-				}
-				}
-				if i != 0 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
-					a := strings.TrimSuffix(words[i+1], ")")
 
-					num, _ := strconv.Atoi(string(a))
-					if num > len(words[:i]) {
-						num = len(words[:i])
+				}
+				if i > 0 && i+1 <= len(words)-1 && (reg.MatchString(words[i+1]) || regPlus.MatchString(words[i+1])) {
+					a := strings.TrimSuffix(words[i+1], ")")
+					numero, _ := strconv.Atoi(string(a))
+					if numero > len(words[:i]) {
+						numero = len(words[:i])
 					}
-					for b := 1; b <= num; b++ {
-						words[i-b] = strings.ToUpper(words[i-b])
+					countponc := 0
+					countwords := 0
+
+					for r := i - 1; countwords < numero && r >= 0; r-- {
+						if ponc.MatchString(words[r]) {
+							countponc++
+						} else {
+							countwords++
+						}
+						total := countponc + countwords
+
+						for j := 1; j <= total; j++ {
+							words[i-j] = strings.ToUpper(words[i-j])
+						}
+
 					}
-					words = append(words[:i], words[i+2:]...) // He removes "(cap,"
+					words = append(words[:i], words[i+2:]...)
 					i--
+
+				}
+			}
+		}
+		for i := 0; i < len(words); i++ {
+			switch words[i] {
+			case "a":
+				for _, char := range voiles {
+					if i+1 < len(words) {
+						if char == rune(words[i+1][0]) && i+1 < len(words) {
+							words[i] = "an"
+						}
+					}
+				}
+			case "A":
+				for _, char := range voiles {
+					if i+1 < len(words) {
+						if char == rune(words[i+1][0]) && i+1 < len(words) {
+							words[i] = "An"
+						}
+					}
 				}
 			}
 		}
 		Lines := strings.Join(words, " ")
-		allLines = append(allLines, Lines)
+		punctuations := []rune{'.', ',', '!', '?', ';', ':'}
+		runes := []rune(Lines)
+
+		for i := 1; i < len(runes); i++ {
+			for _, ponct := range punctuations {
+				if runes[i] == ponct && runes[i-1] == ' ' {
+					runes = append(runes[:i-1], runes[i:]...)
+					i-- // Adjust index to account for removed character
+				}
+				if runes[i] == ponct && i != len(runes)-1 && (runes[i+1] != ' ' && runes[i+1] != ponct) {
+					// Insert a space before punctuation if there isn't already one
+					runes = append(runes[:i+1], append([]rune{' '}, runes[i+1:]...)...)
+					i++ // Move past the inserted space
+				}
+			}
+		}
+		linesAfterponc := string(runes)
+		runesforquots := []rune(linesAfterponc)
+		newslice := []rune(linesAfterponc)
+		
+		k := 0
+		for j := 0; j <= len(runesforquots)-1; j++ {
+			if runesforquots[j] == '\'' && (j-1 >0 && j+1 <= len(runesforquots) -1 ) && (runesforquots[j+1] != ' ' && runesforquots[j-1] != ' ') {
+				continue
+			}
+			if runesforquots[j] == '\'' &&  (j+1 <= len(runesforquots) -1) && runesforquots[j+1] == ' ' {
+				k++
+				newslice = append(newslice[:j+1], newslice[j+2:]...)
+				newslice = append(newslice, ' ')
+
+			}
+			if runesforquots[j] == '\'' &&  j-1 >0  {
+				if runesforquots[j-1] == ' ' {
+					k++
+					if k == 2 {
+						runesforquots = newslice
+						runesforquots = append(runesforquots[:j-2], runesforquots[j-1:]...)
+						k = 0
+					}
+				}
+			}
+		}
+
+		finalresult := string(runesforquots)
+		allLines = append(allLines, finalresult)
+
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal("Error reading file: ", err)
