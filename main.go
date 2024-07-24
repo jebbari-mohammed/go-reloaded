@@ -6,9 +6,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 func main() {
@@ -18,12 +20,12 @@ func main() {
 	}
 	sample := os.Args[1]
 	result := os.Args[2]
+
+	if filepath.Ext(sample) != ".txt" || filepath.Ext(result) != ".txt" {
+		log.Fatal("The file should be .txt")
+	}
 	if result == "main.go" {
 		fmt.Println("haha nice try")
-		return
-	}
-	if os.Args[2][len(result)-3:len(result)] != "txt" {
-		fmt.Println("invalid input: the file should be .txt")
 		return
 	}
 
@@ -115,6 +117,9 @@ func main() {
 						} else if regHex.MatchString(words[j-1]) {
 							words[j-1] = HextoInt(words[j-1])
 							break
+						} else {
+							fmt.Println("error : invalid hex number")
+							return
 						}
 					}
 					words = append(words[:i], words[i+1:]...) // Remove the tag
@@ -133,6 +138,9 @@ func main() {
 						} else if regBin.MatchString(words[j-1]) {
 							words[j-1] = BintoInt(words[j-1])
 							break
+						} else {
+							fmt.Println("error : invalid bin number")
+							return
 						}
 					}
 					words = append(words[:i], words[i+1:]...) // Remove the tag
@@ -274,37 +282,56 @@ func main() {
 				}
 			}
 		}
-		linesAfterponc := string(runes)
-		runesforquots := []rune(linesAfterponc)
-		newslice := []rune(linesAfterponc)
-		
-		k := 0
-		for j := 0; j <= len(runesforquots)-1; j++ {
-			if runesforquots[j] == '\'' && (j-1 >0 && j+1 <= len(runesforquots) -1 ) && (runesforquots[j+1] != ' ' && runesforquots[j-1] != ' ') {
-				continue
-			}
-			if runesforquots[j] == '\'' &&  (j+1 <= len(runesforquots) -1) && runesforquots[j+1] == ' ' {
-				k++
-				newslice = append(newslice[:j+1], newslice[j+2:]...)
-				newslice = append(newslice, ' ')
 
-			}
-			if runesforquots[j] == '\'' &&  j-1 >0  {
-				if runesforquots[j-1] == ' ' {
-					k++
-					if k == 2 {
-						runesforquots = newslice
-						runesforquots = append(runesforquots[:j-2], runesforquots[j-1:]...)
-						k = 0
-					}
-				}
+		// quot
+		count := 0
+		for i := 0; i < len(runes)-1; i++ {
+			if i > 0 && runes[i] == '\'' && runes[i-1] != ' ' && runes[i+1] == ' ' {
+				runes[i] = ' '
+				runes[i+1] = '\''
 			}
 		}
 
-		finalresult := string(runesforquots)
+		for i := 0; i <= len(runes)-1; i++ {
+			if i == 0 && runes[i] == '\'' && len(runes) > 1 {
+				count++
+				if count%2 == 1 && runes[i+1] == ' ' {
+					runes[i+1] = '\a'
+				} else {
+					continue
+				}
+			} else if i == len(runes)-1 && len(runes) > 1 {
+				count++
+				if count%2 == 0 && runes[i-1] == ' ' {
+					runes[i-1] = '\a'
+				} else {
+					continue
+				}
+			}
+			if i > 0 && i < len(runes)-1 && runes[i] == '\'' && (runes[i-1] >= 33 && runes[i-1] <= 126 && runes[i+1] >= 33 && runes[i+1] <= 126) {
+				continue
+			}
+			if i > 0 && i < len(runes)-1 && runes[i] == '\'' && !(runes[i-1] >= 33 && runes[i-1] <= 126 && runes[i+1] >= 33 && runes[i+1] <= 126) {
+				count++
+
+				if count%2 == 0 && (runes[i+1] >= 33 && runes[i+1] <= 126) {
+					runes[i] = ' '
+					runes[i-1] = '\''
+				}
+				if count%2 == 1 && runes[i+1] == ' ' {
+					runes[i+1] = '\a'
+				} else if count%2 == 0 && runes[i-1] == ' ' {
+					runes[i-1] = '\a'
+				}
+			}
+
+		}
+
+		finalresult := strings.ReplaceAll(string(runes), "\a", "")
 		allLines = append(allLines, finalresult)
 
 	}
+
 	if err := scanner.Err(); err != nil {
 		log.Fatal("Error reading file: ", err)
 	}
@@ -333,6 +360,7 @@ func titleCase(word string) string {
 	if len(word) == 0 {
 		return word
 	}
-	// Convert the first character to uppercase and the rest to lowercase
-	return strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+	runes := []rune(strings.ToLower(word))
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }
